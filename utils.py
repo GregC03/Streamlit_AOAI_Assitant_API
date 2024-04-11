@@ -60,7 +60,7 @@ def get_assistant_response(prompt, client: AzureOpenAI, assistant, thread, file_
                     func_name = action['function']['name']
                     arguments = json.loads(action['function']['arguments'])
 
-                    # print(f"Calling Function {func_name} with arguments {arguments}")
+                    print(f"Calling Function {func_name} with arguments {arguments}")
                     
                     # This might create exception if the function is not defined
                     output = call_function(func_name, arguments)

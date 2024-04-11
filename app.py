@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-CHATBOT_NAME = st.secrets["CHATBOT_NAME"]
+CHATBOT_NAME = "Test Chatbot"
 #OPENAI_API_KEY = st.secrets["AZURE_OPENAI_API_KEY"]
 #ASSISTANT_ID = st.secrets["ASST_ID"]
 #ACCEPTED_FILE_TYPES = ["pdf", "txt", "png", "jpeg", "jpg"]
@@ -35,15 +35,13 @@ assistant = client.beta.assistants.create(
     f"4. If the code is successful try to understand where the requested meaningful information is located in the file, for instance, if the file is an excel file the information could be located in a specific table inside a specific sheet. If the file is a PDF it may be in a specifc section of the document. If the file is a powerpoint it may be in a specific slide. If and only if you are not sure where the information is located in the file ask the user for more information."
     f"5. If the code is unsuccessful display the error message and try to revise the code and rerun going through the steps from above again."
     f"6. Once you have located the information display the information to the user."
-    ,
+    f"7. Then write the code to export the information to a file of the format requested by the user and display a preview of the code to show your work."
+    f"8. Run the code to confirm that it runs."
+    f"9. If the code is unsuccessful display the error message and try to revise the code and rerun going through the steps from above again."
+    f"10. Once the code is successful run it and generate the file with the extracted information and display the file to the user.",
     tools=[{"type": "code_interpreter"}],
     #model="gpt-4-1106-preview" #You must replace this value with the deployment name for your model.
 )
-
-'''f"7. Then write the code to export the information to a file of the format requested by the user and display a preview of the code to show your work."
-    f"8. Run the code to confirm that it runs."
-    f"9. If the code is unsuccessful display the error message and try to revise the code and rerun going through the steps from above again."
-    f"10. Once the code is successful run it and generate the file with the extracted information and display the file to the user."'''
 
 st.title(CHATBOT_NAME)
 
