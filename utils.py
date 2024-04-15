@@ -4,6 +4,20 @@ import time
 import json
 from streamlit.runtime.uploaded_file_manager import UploadedFile
 
+
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
+CHATBOT_NAME = "Test Chatbot"
+
+client = AzureOpenAI(
+    api_key = os.getenv("AZURE_OPENAI_KEY"),  
+    api_version = "2024-02-15-preview",
+    azure_endpoint = os.getenv("AZURE_OPENAI_BASE")
+)
+
 try:
     from functions.main import *
 except ImportError:
@@ -80,9 +94,34 @@ def get_assistant_response(prompt, client: AzureOpenAI, assistant, thread, file_
             print("Waiting for the Assistant to process...")
     
     message = messages.data[0].content[-1]
-    message = message.text.value
+    message_content = message.text
+    annotations = message_content.annotations
+    citations = list()
+
+    for index, annotation in enumerate(annotations):
+
+        #message_content.value = message_content.value.replace(annotation.text, f"{{annotation_{index}}}")
+
+        #if (file_citation := getattr(annotation, 'file_citation', None)):
+        #    cited_file = client.files.retrieve(file_citation.file_id)
+        #    citations.append(f'[{index}] {file_citation.quote} from {cited_file.filename}')
+        #el
+        if (file_path := getattr(annotation, 'file_path', None)):
+            cited_file = client.files.retrieve(file_path.file_id)
+            output_file = client.files.content(file_path.file_id)
+            
+            with open(f"./output_{index}.txt", 'wb') as f:
+                f.write(output_file.content)
+            #citations.append(f'[{index}] Click <a href="./output_{index}.txt">{cited_file.filename}</a>')
+            # Note: File download functionality not implemented above for brevity
+
+    #message_content.value += '\n' + '\n'.join(citations)
+
+    #message = messages.data[0].content[-1]
+    #message = message.text.value
     print(f"Assistant Response: {messages}") # debug
-    return message
+    #return message
+    return message_content.value
 
 def upload_files(client: AzureOpenAI, files: list[UploadedFile]):
     OpenAI_files = []

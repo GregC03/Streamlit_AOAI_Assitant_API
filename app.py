@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-CHATBOT_NAME = "Test Chatbot"
+CHATBOT_NAME = "Relevant Data extractor from any file to .txt"
 
 client = AzureOpenAI(
     api_key = os.getenv("AZURE_OPENAI_KEY"),  
@@ -32,7 +32,8 @@ assistant = client.beta.assistants.create(
     f"6. Una volta individuata l'informazione, scrivi il codice per esportare l'informazione in un file del formato richiesto dall'utente e visualizza un'anteprima del codice per mostrare il tuo lavoro."
     f"7. Esegui il codice per confermare che funzioni."
     f"8. Se il codice non ha successo, visualizza il messaggio di errore e cerca di rivedere il codice e rieseguirlo passando attraverso i passaggi di cui sopra di nuovo."
-    f"9. Una volta che il codice ha successo, eseguilo e rendi il file di output generato scaricabile dal browser web. Se l'output è un .txt scrivi le prime poche righe che sono nel file, fai qualcosa di simile per altri tipi di file.",
+    f"9. Una volta che il codice ha successo, eseguilo e salva il file di output."
+    f"10. Scrivi le prime poche righe del file di output nella tua risposta e ricorda all'utente che può scaricare il file di output per visualizzare l'intero risultato.",
     tools=[{"type": "code_interpreter"}],    
 )
 
@@ -55,7 +56,7 @@ with st.form("Files da", clear_on_submit=True):
     submitted = st.form_submit_button("Allega")
 
     if submitted:
-        st.write("File allegati al messaggio di testo, Scrivi la tua richiesta all'assistente!")
+        st.write("File allegati al messaggio di testo, Scrivi la tua richiesta all'assistente! \n TESTING PURPOSE -> USE THIS PROMPT: Nel file .xlsx di input sono presenti dei requisiti per una RFP: trovali, estraili e scrivili in un file .txt con un requisito per ogni riga")
 
 prompt = st.chat_input("Scrivi il tuo messaggio qui...")
 
@@ -74,6 +75,18 @@ if prompt:
         response = get_assistant_response(prompt, client, assistant, st.session_state.thread, file_ids)
 
         st.markdown(response)
+
+    # Download output
+
+    # Get all the files in the main directory
+    files = os.listdir()
+
+    # Filter the files that contain the word "output"
+    output_files = [file for file in files if "output" in file]
+    for file in output_files:
+        with open(file, "rb") as f:
+            file_data = f.read()
+        st.download_button(label=f"Scarica file ({file}) di output", data=file_data, file_name=file)
 
     # The assistant never outputs files
     st.session_state.messages.append({"role": "assistant", "content": response, "file_ids": file_ids})
