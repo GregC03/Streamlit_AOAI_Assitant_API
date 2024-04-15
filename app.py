@@ -9,52 +9,32 @@ from dotenv import load_dotenv
 load_dotenv()
 
 CHATBOT_NAME = "Test Chatbot"
-#OPENAI_API_KEY = st.secrets["AZURE_OPENAI_API_KEY"]
-#ASSISTANT_ID = st.secrets["ASST_ID"]
-#ACCEPTED_FILE_TYPES = ["pdf", "txt", "png", "jpeg", "jpg"]
-
-#client = OpenAI(api_key=OPENAI_API_KEY)
-#assistant = client.beta.assistants.retrieve(ASSISTANT_ID)
 
 client = AzureOpenAI(
     api_key = os.getenv("AZURE_OPENAI_KEY"),  
     api_version = "2024-02-15-preview",
-    azure_endpoint = os.getenv("AZURE_OPENAI_BASE")  # Use AZURE_OPENAI_BASE instead of AZURE_OPENAI_ENDPOINT
+    azure_endpoint = os.getenv("AZURE_OPENAI_BASE")
 )
 
 # Create an assistant
 assistant = client.beta.assistants.create(
-    name="Data Extraction from files",
+    name="Assistente estrattore di dati rilevanti da file",
     #model="gpt-4-1106-preview", #You must replace this value with the deployment name for your model.
     model = os.getenv("AZURE_OPENAI_MODEL"),
-    instructions=f"You are a helpful AI assistant who extracts meaningful data from files following the instructions of the user and returns that data to the user." 
-    f"You have access to a sandboxed environment for writing and testing code (code interpreter)."
-    f"When you are asked to to extract data from a file you should follow these steps:"
-    f"1. Write the code to read the file uploaded by the user."
-    f"2. Anytime you write new code display a preview of the code to show your work."
-    f"3. Run the code to confirm that it runs."
-    f"4. If the code is successful try to understand where the requested meaningful information is located in the file, for instance, if the file is an excel file the information could be located in a specific table inside a specific sheet. If the file is a PDF it may be in a specifc section of the document. If the file is a powerpoint it may be in a specific slide. If and only if you are not sure where the information is located in the file ask the user for more information."
-    f"5. If the code is unsuccessful display the error message and try to revise the code and rerun going through the steps from above again."
-    f"6. Once you have located the information, write the code to export the information to a file of the format requested by the user and display a preview of the code to show your work."
-    f"8. Run the code to confirm that it runs."
-    f"9. If the code is unsuccessful display the error message and try to revise the code and rerun going through the steps from above again."
-    f"10. Once the code is successful run it and generate the file with the extracted information and Prompt my browser to download the image when complete.",
-    tools=[{"type": "code_interpreter"}]    
+    instructions=f"Sei un utile assistente AI che estrae dati significativi dai file seguendo le istruzioni dell'utente e restituisce quei dati all'utente."
+    f"Hai accesso a un ambiente sandbox per scrivere e testare il codice (code interpreter) e puoi chiamare funzioni."
+    f"Quando ti viene chiesto di estrarre dati da un file, dovresti seguire questi passaggi:"
+    f"1. Scrivi il codice per leggere il file caricato dall'utente."
+    f"2. Ogni volta che scrivi un nuovo codice, visualizza un'anteprima del codice per mostrare il tuo lavoro."
+    f"3. Esegui il codice per confermare che funzioni."
+    f"4. Se il codice ha successo, cerca di capire dove si trova l'informazione significativa richiesta nel file, ad esempio, se il file è un file Excel, le informazioni potrebbero trovarsi in una tabella specifica all'interno di un foglio specifico. Se il file è un PDF, potrebbe trovarsi in una sezione specifica del documento. Se il file è una presentazione, potrebbe trovarsi in una diapositiva specifica. Se e solo se non sei sicuro di dove si trovi l'informazione nel file, chiedi all'utente maggiori informazioni."
+    f"5. Se il codice non ha successo, visualizza il messaggio di errore e cerca di rivedere il codice e rieseguirlo passando attraverso i passaggi di cui sopra di nuovo."
+    f"6. Una volta individuata l'informazione, scrivi il codice per esportare l'informazione in un file del formato richiesto dall'utente e visualizza un'anteprima del codice per mostrare il tuo lavoro."
+    f"7. Esegui il codice per confermare che funzioni."
+    f"8. Se il codice non ha successo, visualizza il messaggio di errore e cerca di rivedere il codice e rieseguirlo passando attraverso i passaggi di cui sopra di nuovo."
+    f"9. Una volta che il codice ha successo, eseguilo e rendi il file di output generato scaricabile dal browser web. Se l'output è un .txt scrivi le prime poche righe che sono nel file, fai qualcosa di simile per altri tipi di file.",
+    tools=[{"type": "code_interpreter"}],    
 )
-
-'''instructions=f"You are a helpful AI assistant who extracts meaningful data from files following the instructions of the user and returns that data to the user." 
-    f"You have access to a sandboxed environment for writing and testing code (code interpreter)."
-    f"When you are asked to to extract data from a file you should follow these steps:"
-    f"1. Write the code to read the file uploaded by the user."
-    f"2. Anytime you write new code display a preview of the code to show your work."
-    f"3. Run the code to confirm that it runs."
-    f"4. If the code is successful try to understand where the requested meaningful information is located in the file, for instance, if the file is an excel file the information could be located in a specific table inside a specific sheet. If the file is a PDF it may be in a specifc section of the document. If the file is a powerpoint it may be in a specific slide. If and only if you are not sure where the information is located in the file ask the user for more information."
-    f"5. If the code is unsuccessful display the error message and try to revise the code and rerun going through the steps from above again."
-    f"6. Once you have located the information display the information to the user."
-    f"7. Then write the code to export the information to a file of the format requested by the user and display a preview of the code to show your work."
-    f"8. Run the code to confirm that it runs."
-    f"9. If the code is unsuccessful display the error message and try to revise the code and rerun going through the steps from above again."
-    f"10. Once the code is successful run it and generate the file with the extracted information and display the file to the user.",'''
 
 st.title(CHATBOT_NAME)
 
@@ -70,14 +50,14 @@ for message in st.session_state.messages:
         st.markdown(message["content"])
 
 # Upload files form (this moves as chat messages adds up... You should fix it)
-with st.form("Files form", clear_on_submit=True):
-    uploaded_files = st.file_uploader("Upload Files", accept_multiple_files=True)#, type=ACCEPTED_FILE_TYPES)
-    submitted = st.form_submit_button("Attach")
+with st.form("Files da", clear_on_submit=True):
+    uploaded_files = st.file_uploader("Carica Files", accept_multiple_files=True)#, type=ACCEPTED_FILE_TYPES)
+    submitted = st.form_submit_button("Allega")
 
     if submitted:
-        st.write("Files attached to next message! Type something!")
+        st.write("File allegati al messaggio di testo, Scrivi la tua richiesta all'assistente!")
 
-prompt = st.chat_input("Write your message here...")
+prompt = st.chat_input("Scrivi il tuo messaggio qui...")
 
 if prompt:
     OpenAI_files = []
@@ -87,7 +67,7 @@ if prompt:
     st.session_state.messages.append({"role": "user", "content": prompt, "OpenAI_files": OpenAI_files})
     with st.chat_message("user"):
         st.markdown(prompt)
-        st.write(f"Attached files: {', '.join([OpenAI_file.filename for OpenAI_file in OpenAI_files])}")
+        st.write(f"Files allegati: {', '.join([OpenAI_file.filename for OpenAI_file in OpenAI_files])}")
 
     with st.chat_message("assistant"):
         file_ids = [OpenAI_file.id for OpenAI_file in OpenAI_files]
@@ -96,7 +76,8 @@ if prompt:
         st.markdown(response)
 
     # The assistant never outputs files
-    st.session_state.messages.append({"role": "assistant", "content": response, "file_ids": []})
+    st.session_state.messages.append({"role": "assistant", "content": response, "file_ids": file_ids})
 
     # Reset uploaded_files to None after processing the user's message
     st.session_state.uploaded_files = None
+

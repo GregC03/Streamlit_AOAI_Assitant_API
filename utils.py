@@ -81,7 +81,7 @@ def get_assistant_response(prompt, client: AzureOpenAI, assistant, thread, file_
     
     message = messages.data[0].content[-1]
     message = message.text.value
-
+    print(f"Assistant Response: {messages}") # debug
     return message
 
 def upload_files(client: AzureOpenAI, files: list[UploadedFile]):
