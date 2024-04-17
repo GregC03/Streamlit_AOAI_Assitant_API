@@ -3,6 +3,8 @@ from openai import AzureOpenAI
 import time
 import json
 from streamlit.runtime.uploaded_file_manager import UploadedFile
+from datetime import datetime
+import random
 
 
 from dotenv import load_dotenv
@@ -10,7 +12,7 @@ import os
 
 load_dotenv()
 
-CHATBOT_NAME = "Test Chatbot"
+CHATBOT_NAME = "Chatbot - Data extractor from files"
 
 client = AzureOpenAI(
     api_key = os.getenv("AZURE_OPENAI_KEY"),  
@@ -32,7 +34,7 @@ def call_function(function_name: str, arguments):
     else:
         raise ValueError(f"Function '{function_name}' does not exist")
 
-def get_assistant_response(prompt, client: AzureOpenAI, assistant, thread, file_ids):
+def get_assistant_response(prompt, client: AzureOpenAI, assistant, thread, file_ids, prompt_counter):
     # Add user message to thread
     client.beta.threads.messages.create(
         thread_id=thread.id,
@@ -100,7 +102,7 @@ def get_assistant_response(prompt, client: AzureOpenAI, assistant, thread, file_
 
     for index, annotation in enumerate(annotations):
 
-        #message_content.value = message_content.value.replace(annotation.text, f"{{annotation_{index}}}")
+        message_content.value = message_content.value.replace(annotation.text, f"{{annotation_{index}}}")
 
         #if (file_citation := getattr(annotation, 'file_citation', None)):
         #    cited_file = client.files.retrieve(file_citation.file_id)
@@ -109,9 +111,14 @@ def get_assistant_response(prompt, client: AzureOpenAI, assistant, thread, file_
         if (file_path := getattr(annotation, 'file_path', None)):
             cited_file = client.files.retrieve(file_path.file_id)
             output_file = client.files.content(file_path.file_id)
-            
-            with open(f"./output_{index}.txt", 'wb') as f:
+            file_extension = cited_file.filename[cited_file.filename.find('.'):]
+            output_path = f"./{str(datetime.now()).replace(' ', '_').replace(':', '-').replace('.', '_')}_output_{prompt_counter}{index}{file_extension}"
+            with open(output_path, 'wb') as f:
                 f.write(output_file.content)
+            
+            #message_content.value = message_content.value.replace(annotation.text, f"{{annotation_{index}}}")
+
+            
             #citations.append(f'[{index}] Click <a href="./output_{index}.txt">{cited_file.filename}</a>')
             # Note: File download functionality not implemented above for brevity
 
@@ -124,9 +131,37 @@ def get_assistant_response(prompt, client: AzureOpenAI, assistant, thread, file_
     return message_content.value
 
 def upload_files(client: AzureOpenAI, files: list[UploadedFile]):
-    OpenAI_files = []
+    AzureOpenAI_files = []
 
     for file in files:
-        OpenAI_files.append(client.files.create(file=file, purpose='assistants'))
+        AzureOpenAI_files.append(client.files.create(file=file, purpose='assistants'))
     
-    return OpenAI_files
+    return AzureOpenAI_files
+
+
+def download_buttons_sidebar():
+    #download files
+    @st.cache_data
+    def read_file(file):
+        with open(file, "rb") as f:
+            return f.read()
+    
+    # Get all the files in the main directory
+    files = os.listdir()
+    
+    # Filter the files that contain the word "output"
+    output_files = [file for file in files if "output" in file]
+    
+    # Check if 'output_files_data' is already in the session state
+    if 'output_files_data' not in st.session_state:
+        st.session_state.output_files_data = {}
+    
+    # Read the files and store them in the session state
+    for file in output_files:
+        if file not in st.session_state.output_files_data:
+            file_data = read_file(file)
+            st.session_state.output_files_data[file] = file_data
+    
+    # Create download buttons in the sidebar from the session state
+    for file, file_data in st.session_state.output_files_data.items():
+        st.sidebar.download_button(label=f"Scarica file ({file}) di output", data=file_data, file_name=file, key=random.random())
